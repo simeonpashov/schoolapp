@@ -1,0 +1,126 @@
+@page "/"
+@inject StudentCrudService StudentService
+@inject AppDbContext DbContext
+
+<PageTitle>Групов проект</PageTitle>
+
+<h1>Групов проект - Blazor приложение</h1>
+<p>Бизнес слой с 5+ класа данни, CRUD слой и презентационен слой.</p>
+
+<h2>Управление на ученици (CRUD)</h2>
+
+<EditForm Model="editModel" OnValidSubmit="SaveStudentAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-grid">
+        <InputNumber @bind-Value="editModel.Id" placeholder="Id (за редакция)" />
+        <InputText @bind-Value="editModel.FirstName" placeholder="Име" />
+        <InputText @bind-Value="editModel.LastName" placeholder="Фамилия" />
+        <InputNumber @bind-Value="editModel.Age" placeholder="Години" />
+        <InputText @bind-Value="editModel.Email" placeholder="Имейл" />
+        <InputNumber @bind-Value="editModel.TeamId" placeholder="TeamId" />
+    </div>
+
+    <div class="actions">
+        <button type="button" @onclick="CreateStudentAsync">Добави</button>
+        <button type="submit">Обнови</button>
+    </div>
+</EditForm>
+
+<div class="actions">
+    <InputNumber @bind-Value="deleteId" placeholder="Id за изтриване" />
+    <button @onclick="DeleteStudentAsync">Изтрий</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    <p><strong>@message</strong></p>
+}
+
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Име</th>
+            <th>Фамилия</th>
+            <th>Години</th>
+            <th>Имейл</th>
+            <th>TeamId</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in students)
+        {
+            <tr>
+                <td>@student.Id</td>
+                <td>@student.FirstName</td>
+                <td>@student.LastName</td>
+                <td>@student.Age</td>
+                <td>@student.Email</td>
+                <td>@student.TeamId</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Student> students = new();
+    private Student editModel = new();
+    private int deleteId;
+    private string message = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DbContext.Database.EnsureCreatedAsync();
+        await LoadStudentsAsync();
+    }
+
+    private async Task LoadStudentsAsync()
+    {
+        students = await StudentService.GetAllAsync();
+    }
+
+    private async Task CreateStudentAsync()
+    {
+        var student = new Student
+        {
+            FirstName = editModel.FirstName,
+            LastName = editModel.LastName,
+            Age = editModel.Age,
+            Email = editModel.Email,
+            TeamId = editModel.TeamId
+        };
+
+        await StudentService.CreateAsync(student);
+        message = "Ученикът е добавен успешно.";
+        await LoadStudentsAsync();
+        editModel = new Student();
+    }
+
+    private async Task SaveStudentAsync()
+    {
+        if (editModel.Id <= 0)
+        {
+            message = "За обновяване въведи валидно Id.";
+            return;
+        }
+
+        var updated = await StudentService.UpdateAsync(editModel);
+        message = updated ? "Ученикът е обновен успешно." : "Ученик с това Id не е намерен.";
+        await LoadStudentsAsync();
+    }
+
+    private async Task DeleteStudentAsync()
+    {
+        if (deleteId <= 0)
+        {
+            message = "Въведи валидно Id за изтриване.";
+            return;
+        }
+
+        var deleted = await StudentService.DeleteAsync(deleteId);
+        message = deleted ? "Ученикът е изтрит." : "Няма ученик с това Id.";
+        await LoadStudentsAsync();
+    }
+}

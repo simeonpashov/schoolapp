@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    background: #fafafa;
+}
+
+button {
+    background: #2563eb;
+    border: none;
+    border-radius: 0.25rem;
+    color: white;
+    cursor: pointer;
+    padding: 0.4rem 0.7rem;
+}
+
+input {
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    padding: 0.35rem;
+}
